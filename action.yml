@@ -1,0 +1,56 @@
+name: 'site-verifier'
+description: 'Verifies the availability and correctness of specified URLs, supporting various HTTP methods, authentication, and payload verification.'
+inputs:
+  siteUrl:
+    description: 'The target URL for verification. Must be fully qualified, including the scheme (http/https).'
+    required: true
+  expectedStatusCode:
+    description: 'The expected HTTP status code from the request. Defaults to `200`.'
+    required: true
+    default: '200'
+  useAuthentication:
+    description: 'Indicates if authentication is required for the request.'
+    required: false
+    default: 'false'
+  authenticationMethod:
+    description: 'Specifies the authentication type (`basic` or `header`). Only considered if `useAuthentication` is `true`.'
+    required: false
+    default: 'basic'
+  httpMethod:
+    description: 'The HTTP method to use for the request. Defaults to `GET`.'
+    required: true
+    default: 'GET'
+  requestPayload:
+    description: 'Optional. JSON payload for POST, PUT, or PATCH requests.'
+    required: false
+  contentType:
+    description: 'The Content-Type header for the request. Defaults to `application/json`.'
+    required: false
+    default: 'application/json'
+  logResponse:
+    description: 'Enable this option to log the response content. Be mindful of sensitive information.'
+    required: false
+    default: 'false'
+  responseOutput:
+    description: 'An optional variable to store the response body. Specify the variable name to store the response content.'
+    required: false
+  expectedPayload:
+    description: 'The expected response payload for validation purposes.'
+    required: false
+  responseFilterPath:
+    description: 'Defines JSONPath expression for JSON responses to filter data, uses CSS-like selectors for HTML/XML, and specifies a substring for plain text.'
+    required: false
+  maxRetries:
+    description: 'Controls the number of retry attempts upon failure. Defaults to `3`.'
+    required: false
+    default: '3'
+  delayBetweenRetries:
+    description: 'The delay between retries, in seconds. Defaults to `5`.'
+    required: false
+    default: '5'
+  environmentVariables:
+    description: 'Additional environment variables for authentication. Use the format `KEY=VALUE` for each variable.'
+    required: false
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

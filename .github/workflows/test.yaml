@@ -1,0 +1,231 @@
+name: Site Verification Workflow
+
+on: [push, pull_request]
+
+jobs:
+  Tests:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: SUCCESS_Expected_Return_Code
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/status/200"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+
+      - name: FAILED_Expected_Return_Code_Is_Different
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/status/200"
+          expectedStatusCode: 201
+          httpMethod: "GET"
+        continue-on-error: true
+
+      - name: FAILED_Expected_Return_Code_Failed_Because_Of_Url
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/status/400"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+        continue-on-error: true
+
+      - name: SUCCESS_Basic_Auth_with_Username_Password
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: basic
+        env:
+          SITE_USERNAME: ${{ secrets.Site_Username }}
+          SITE_PASSWORD: ${{ secrets.Site_Password }}
+
+      - name: SUCCESS_Basic_Auth_with_Basic_Auth
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/bearer"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: header
+        env:
+          SITE_AUTH_TOKEN: ${{ secrets.Site_BasicAuth }}
+
+      - name: SUCCESS_Basic_Auth_with_Username_Password_and_Expected_Payload
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: basic
+          expectedPayload: '{"authenticated": true,"user": "user"}'
+        env:
+          SITE_USERNAME: ${{ secrets.Site_Username }}
+          SITE_PASSWORD: ${{ secrets.Site_Password }}
+
+      - name: FAILED_Basic_Auth_Missing_Variables
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: basic
+          expectedPayload: '{"authenticated": true,"user": "user"}'
+        continue-on-error: true
+
+      - name: FAILED_Basic_Auth_Expected_Return_Code_is_Different
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 201
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: basic
+          expectedPayload: '{"authenticated": true,"user": "user"}'
+        env:
+          SITE_USERNAME: ${{ secrets.Site_Username }}
+          SITE_PASSWORD: ${{ secrets.Site_Password }}
+        continue-on-error: true
+
+      - name: FAILED_Basic_Auth_Expected_Payload_is_Different
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: basic
+          expectedPayload: '{" authenticated": true,"user": "user"}'
+        env:
+          SITE_USERNAME: ${{ secrets.Site_Username }}
+          SITE_PASSWORD: ${{ secrets.Site_Password }}
+        continue-on-error: true
+
+      - name: SUCCESS_Do_Post_Request
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/post"
+          expectedStatusCode: 200
+          httpMethod: "POST"
+
+      - name: SUCCESS_Do_Post_Request_with_Body
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/anything"
+          expectedStatusCode: 200
+          httpMethod: "POST"
+          logResponse: true
+          requestPayload: '{"key":"value"}'
+
+      - name: HTML Content Verification
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/html"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          contentType: "text/html"
+          logResponse: true
+
+      - name: Response in XML
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/xml"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          contentType: "application/xml"
+          responseFilterPath: "slide > title"
+          expectedPayload: "Wake up to WonderWidgets!"
+
+      - name: Response in Text Plain
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/deny"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          contentType: "text/plain"
+          responseFilterPath: "YOU SHOULDN'T BE HERE"
+          expectedPayload: true
+
+      - name: Response in HTML
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/html"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          contentType: "text/html"
+          responseFilterPath: "h1"
+          expectedPayload: "Herman Melville - Moby-Dick"
+
+      - name: POST Request with Body and Payload Verification
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://jsonplaceholder.typicode.com/posts"
+          expectedStatusCode: 201
+          httpMethod: "POST"
+          requestPayload: '{"title": "foo", "body": "bar", "userId": 1}'
+          expectedPayload: '{"title": "foo", "body": "bar", "userId": 1, "id": 101}'
+
+      - name: PUT Request with Response Filtering (Non-nested)
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://jsonplaceholder.typicode.com/posts/1"
+          expectedStatusCode: 200
+          httpMethod: "PUT"
+          maxRetries: 1
+          requestPayload: '{"title": "foo", "body": "bar", "userId": 2}'
+          expectedPayload: "2"
+          logResponse: true
+          responseOutput: "my_response"
+          responseFilterPath: "userId"
+
+      - name: GET Request with Deeply Nested Response Filtering (City)
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://jsonplaceholder.typicode.com/users/1"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          expectedPayload: "Gwenborough"
+          responseFilterPath: "address.city"
+
+  check-authentication-status:
+    runs-on: ubuntu-latest
+    outputs:
+      isAuthenticated: ${{ steps.check_auth.outputs.isAuthenticated }}
+    steps:
+      - name: Check Authentication Status
+        id: check_auth
+        uses: salih18/site-verifier@v0
+        with:
+          siteUrl: "https://httpbin.org/basic-auth/user/passwd"
+          expectedStatusCode: 200
+          httpMethod: "GET"
+          useAuthentication: true
+          authenticationMethod: "basic"
+          responseFilterPath: "authenticated"
+          responseOutput: "isAuthenticated"
+          logResponse: true
+        env:
+          SITE_USERNAME: "user"
+          SITE_PASSWORD: "passwd"
+
+  run-based-on-authentication:
+    needs: check-authentication-status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticated User Script
+        if: ${{ needs.check-authentication-status.outputs.isAuthenticated == 'true' }}
+        run: |
+          echo "User is authenticated. Running authenticated script..."
+          # Your script for authenticated user goes here
+
+      - name: Unauthenticated User Script
+        if: ${{ needs.check-authentication-status.outputs.isAuthenticated != 'true' }}
+        run: |
+          echo "User is not authenticated. Running unauthenticated script..."
+          # Your script for unauthenticated user goes here
