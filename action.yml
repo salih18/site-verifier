@@ -1,5 +1,8 @@
 name: 'site-verifier'
 description: 'A GitHub Action verifies URL availability with HTTP methods, authentication, and payload verification.'
+branding:
+  icon: 'globe'
+  color: 'white' 
 inputs:
   siteUrl:
     description: 'The target URL for verification. Must be fully qualified, including the scheme (http/https).'
